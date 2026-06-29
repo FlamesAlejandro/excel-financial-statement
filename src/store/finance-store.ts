@@ -52,6 +52,7 @@ interface FinanceStoreState {
 
 interface FinanceStoreActions {
   setWorkbook: (workbook: FinanceWorkbook) => void
+  markWorkbookAsExported: () => void
   resetToMockWorkbook: () => void
   selectMonth: (monthId: string) => void
   createMonth: (year: number, month: number) => void
@@ -185,6 +186,12 @@ export const useFinanceStore = create<FinanceStore>((set) => ({
       hasUnsavedChanges: false,
       importErrors: [],
       importWarnings: []
+    }))
+  },
+
+  markWorkbookAsExported: () => {
+    set(() => ({
+      hasUnsavedChanges: false
     }))
   },
 
