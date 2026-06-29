@@ -6,6 +6,7 @@ import { ExtraIncomesSection } from '../features/incomes/ExtraIncomesSection'
 import { ExpensesSection } from '../features/expenses/ExpensesSection'
 import { PaymentMethodsSection } from '../features/payment-methods/PaymentMethodsSection'
 import { FixedExpensesSection } from '../features/fixed-expenses/FixedExpensesSection'
+import { InstallmentsSection } from '../features/installments/InstallmentsSection'
 
 export function AppShell() {
   return (
@@ -20,6 +21,7 @@ export function AppShell() {
           <ExpensesSection />
           <PaymentMethodsSection />
           <FixedExpensesSection />
+          <InstallmentsSection />
         </div>
       </main>
     </div>

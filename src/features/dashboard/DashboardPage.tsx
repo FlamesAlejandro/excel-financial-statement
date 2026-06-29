@@ -66,7 +66,10 @@ export function DashboardPage() {
           groupedTotals={groupedByPaymentMethod}
           paymentMethods={workbook.paymentMethods}
         />
-        <InstallmentsPreview charges={activeInstallments} />
+        <InstallmentsPreview
+          charges={activeInstallments}
+          paymentMethods={workbook.paymentMethods}
+        />
       </div>
     </section>
   )
