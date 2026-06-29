@@ -18,7 +18,7 @@ function toCellValue(value: unknown): string | number | boolean {
 }
 
 function sanitizeSheetName(name: string): string {
-  const sanitized = name.replace(/[\\/?*\[\]:]/g, ' ').trim()
+  const sanitized = name.replace(/[[\]\\/?*:]/g, ' ').trim()
   return (sanitized || 'Mes').slice(0, 31)
 }
 

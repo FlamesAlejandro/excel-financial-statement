@@ -168,6 +168,20 @@ export function ExpensesSection() {
     [selectedMonth]
   )
 
+  const formInitialValues: ExpenseFormOutput = editingExpense
+    ? {
+        date: toDateInputValue(editingExpense.date),
+        description: editingExpense.description,
+        amount: editingExpense.amount,
+        paymentMethodId: editingExpense.paymentMethodId,
+        category: editingExpense.category ?? '',
+        notes: editingExpense.notes ?? ''
+      }
+    : {
+        ...emptyExpenseValues,
+        paymentMethodId: activePaymentMethods[0]?.id ?? ''
+      }
+
   if (!selectedMonth) {
     return (
       <Card className="p-6">
@@ -193,24 +207,6 @@ export function ExpensesSection() {
     setIsFormOpen(false)
     setEditingExpense(null)
   }
-
-  const formInitialValues = useMemo<ExpenseFormOutput>(
-    () =>
-      editingExpense
-        ? {
-            date: toDateInputValue(editingExpense.date),
-            description: editingExpense.description,
-            amount: editingExpense.amount,
-            paymentMethodId: editingExpense.paymentMethodId,
-            category: editingExpense.category ?? '',
-            notes: editingExpense.notes ?? ''
-          }
-        : {
-            ...emptyExpenseValues,
-            paymentMethodId: activePaymentMethods[0]?.id ?? ''
-          },
-    [activePaymentMethods, editingExpense]
-  )
 
   const handleSave = (values: ExpenseFormValues) => {
     const payload = {

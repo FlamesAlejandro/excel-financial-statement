@@ -253,6 +253,22 @@ export function InstallmentsSection() {
     [selectedMonth]
   )
 
+  const formInitialValues: InstallmentExpenseFormOutput = editingInstallment
+    ? {
+        purchaseDate: toDateInputValue(editingInstallment.purchaseDate),
+        description: editingInstallment.description,
+        totalAmount: editingInstallment.totalAmount,
+        installmentsCount: editingInstallment.installmentsCount,
+        paymentMethodId: editingInstallment.paymentMethodId,
+        category: editingInstallment.category ?? '',
+        notes: editingInstallment.notes ?? '',
+        isActive: editingInstallment.isActive
+      }
+    : {
+        ...emptyInstallmentValues,
+        paymentMethodId: activePaymentMethods[0]?.id ?? ''
+      }
+
   if (!selectedMonth) {
     return (
       <Card className="p-6">
@@ -278,26 +294,6 @@ export function InstallmentsSection() {
     setIsFormOpen(false)
     setEditingInstallment(null)
   }
-
-  const formInitialValues = useMemo<InstallmentExpenseFormOutput>(
-    () =>
-      editingInstallment
-        ? {
-            purchaseDate: toDateInputValue(editingInstallment.purchaseDate),
-            description: editingInstallment.description,
-            totalAmount: editingInstallment.totalAmount,
-            installmentsCount: editingInstallment.installmentsCount,
-            paymentMethodId: editingInstallment.paymentMethodId,
-            category: editingInstallment.category ?? '',
-            notes: editingInstallment.notes ?? '',
-            isActive: editingInstallment.isActive
-          }
-        : {
-            ...emptyInstallmentValues,
-            paymentMethodId: activePaymentMethods[0]?.id ?? ''
-          },
-    [activePaymentMethods, editingInstallment]
-  )
 
   const handleSave = (values: InstallmentExpenseFormOutput) => {
     const installmentAmount = roundMoney(

@@ -67,9 +67,18 @@ export function MonthSelector({
   useEffect(() => {
     if (isCreateModalOpen) {
       reset({ year: currentYear, month: currentMonth })
-      setCreateError(null)
     }
   }, [currentMonth, currentYear, isCreateModalOpen, reset])
+
+  const openCreateModal = () => {
+    setCreateError(null)
+    setIsCreateModalOpen(true)
+  }
+
+  const closeCreateModal = () => {
+    setCreateError(null)
+    setIsCreateModalOpen(false)
+  }
 
   const submitCreateMonth = (values: CreateMonthOutput) => {
     const duplicate = months.some(
@@ -110,7 +119,7 @@ export function MonthSelector({
           )}
         </div>
 
-        <Button type="button" onClick={() => setIsCreateModalOpen(true)}>
+        <Button type="button" onClick={openCreateModal}>
           Crear mes
         </Button>
       </div>
@@ -118,7 +127,7 @@ export function MonthSelector({
       <Modal
         open={isCreateModalOpen}
         title="Crear nuevo mes"
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={closeCreateModal}
       >
         <form className="space-y-4" onSubmit={handleSubmit(submitCreateMonth)}>
           <Input
@@ -151,7 +160,7 @@ export function MonthSelector({
             <Button
               type="button"
               className="bg-slate-200 text-slate-800 hover:bg-slate-300"
-              onClick={() => setIsCreateModalOpen(false)}
+              onClick={closeCreateModal}
             >
               Cancelar
             </Button>

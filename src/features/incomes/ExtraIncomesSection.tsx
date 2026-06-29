@@ -144,6 +144,16 @@ export function ExtraIncomesSection() {
     [selectedMonth]
   )
 
+  const formInitialValues: IncomeFormOutput = editingIncome
+    ? {
+        date: toDateInputValue(editingIncome.date),
+        description: editingIncome.description,
+        amount: editingIncome.amount,
+        source: editingIncome.source ?? '',
+        notes: editingIncome.notes ?? ''
+      }
+    : emptyIncomeValues
+
   if (!selectedMonth) {
     return (
       <Card className="p-6">
@@ -169,20 +179,6 @@ export function ExtraIncomesSection() {
     setIsFormOpen(false)
     setEditingIncome(null)
   }
-
-  const formInitialValues = useMemo<IncomeFormOutput>(
-    () =>
-      editingIncome
-        ? {
-            date: toDateInputValue(editingIncome.date),
-            description: editingIncome.description,
-            amount: editingIncome.amount,
-            source: editingIncome.source ?? '',
-            notes: editingIncome.notes ?? ''
-          }
-        : emptyIncomeValues,
-    [editingIncome]
-  )
 
   const handleSave = (values: IncomeFormValues) => {
     const payload = {

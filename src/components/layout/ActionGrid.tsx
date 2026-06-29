@@ -27,6 +27,7 @@ export function ActionGrid() {
   const importErrors = useFinanceStore((state) => state.importErrors)
   const importWarnings = useFinanceStore((state) => state.importWarnings)
   const fileName = useFinanceStore((state) => state.fileName)
+  const hasUnsavedChanges = useFinanceStore((state) => state.hasUnsavedChanges)
   const markWorkbookAsExported = useFinanceStore(
     (state) => state.markWorkbookAsExported
   )
@@ -110,6 +111,11 @@ export function ActionGrid() {
       {fileName ? (
         <p className="mt-1 text-xs text-slate-600">
           Archivo cargado: {fileName}
+        </p>
+      ) : null}
+      {hasUnsavedChanges ? (
+        <p className="mt-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+          Hay cambios sin exportar. Recuerda generar un Excel actualizado.
         </p>
       ) : null}
 
