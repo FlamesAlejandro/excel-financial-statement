@@ -1,6 +1,9 @@
 import { ActionGrid } from '../components/layout/ActionGrid'
 import { PageHeader } from '../components/layout/PageHeader'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
+import { SalarySection } from '../features/salary/SalarySection'
+import { ExtraIncomesSection } from '../features/incomes/ExtraIncomesSection'
+import { ExpensesSection } from '../features/expenses/ExpensesSection'
 
 export function AppShell() {
   return (
@@ -9,6 +12,11 @@ export function AppShell() {
         <PageHeader />
         <ActionGrid />
         <DashboardPage />
+        <div className="grid gap-6">
+          <SalarySection />
+          <ExtraIncomesSection />
+          <ExpensesSection />
+        </div>
       </main>
     </div>
   )
