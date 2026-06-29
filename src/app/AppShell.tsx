@@ -4,6 +4,8 @@ import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { SalarySection } from '../features/salary/SalarySection'
 import { ExtraIncomesSection } from '../features/incomes/ExtraIncomesSection'
 import { ExpensesSection } from '../features/expenses/ExpensesSection'
+import { PaymentMethodsSection } from '../features/payment-methods/PaymentMethodsSection'
+import { FixedExpensesSection } from '../features/fixed-expenses/FixedExpensesSection'
 
 export function AppShell() {
   return (
@@ -16,6 +18,8 @@ export function AppShell() {
           <SalarySection />
           <ExtraIncomesSection />
           <ExpensesSection />
+          <PaymentMethodsSection />
+          <FixedExpensesSection />
         </div>
       </main>
     </div>
