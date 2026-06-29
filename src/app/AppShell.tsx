@@ -1,5 +1,6 @@
 import { ActionGrid } from '../components/layout/ActionGrid'
 import { PageHeader } from '../components/layout/PageHeader'
+import { DashboardPage } from '../features/dashboard/DashboardPage'
 
 export function AppShell() {
   return (
@@ -7,6 +8,7 @@ export function AppShell() {
       <main className="mx-auto w-full max-w-6xl space-y-6">
         <PageHeader />
         <ActionGrid />
+        <DashboardPage />
       </main>
     </div>
   )
