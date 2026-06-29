@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx'
 
 import type { FinanceWorkbook } from '../../domain/finance/types'
 import { buildExcelWorkbook } from './excel-export'
+import { importWorkbookFromExcel } from './excel-import'
 import { createDefaultFinanceWorkbook } from './excel-template'
 import { EXCEL_MIME_TYPE } from './excel-version'
 
@@ -56,3 +57,5 @@ export function downloadDefaultWorkbookExcel(): void {
   const workbook = createDefaultFinanceWorkbook()
   downloadWorkbookExcel(workbook)
 }
+
+export { importWorkbookFromExcel }

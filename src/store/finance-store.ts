@@ -53,6 +53,16 @@ interface FinanceStoreState {
 interface FinanceStoreActions {
   setWorkbook: (workbook: FinanceWorkbook) => void
   markWorkbookAsExported: () => void
+  startWorkbookImport: () => void
+  finishWorkbookImportSuccess: (params: {
+    workbook: FinanceWorkbook
+    fileName: string | null
+    warnings: string[]
+  }) => void
+  finishWorkbookImportFailure: (params: {
+    errors: string[]
+    warnings: string[]
+  }) => void
   resetToMockWorkbook: () => void
   selectMonth: (monthId: string) => void
   createMonth: (year: number, month: number) => void
@@ -192,6 +202,36 @@ export const useFinanceStore = create<FinanceStore>((set) => ({
   markWorkbookAsExported: () => {
     set(() => ({
       hasUnsavedChanges: false
+    }))
+  },
+
+  startWorkbookImport: () => {
+    set(() => ({
+      isLoading: true,
+      importErrors: [],
+      importWarnings: []
+    }))
+  },
+
+  finishWorkbookImportSuccess: ({ workbook, fileName, warnings }) => {
+    const normalizedWorkbook = normalizeWorkbookMonths(workbook)
+
+    set(() => ({
+      workbook: normalizedWorkbook,
+      selectedMonthId: normalizedWorkbook.months[0]?.id ?? null,
+      fileName,
+      isLoading: false,
+      importErrors: [],
+      importWarnings: warnings,
+      hasUnsavedChanges: false
+    }))
+  },
+
+  finishWorkbookImportFailure: ({ errors, warnings }) => {
+    set(() => ({
+      isLoading: false,
+      importErrors: errors,
+      importWarnings: warnings
     }))
   },
 
