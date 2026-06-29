@@ -13,6 +13,7 @@ export function DashboardPage() {
   const workbook = useFinanceStore((state) => state.workbook)
   const selectedMonthId = useFinanceStore((state) => state.selectedMonthId)
   const selectMonth = useFinanceStore((state) => state.selectMonth)
+  const createMonth = useFinanceStore((state) => state.createMonth)
 
   const selectedMonth = workbook.months.find(
     (month) => month.id === selectedMonthId
@@ -20,14 +21,22 @@ export function DashboardPage() {
 
   if (!selectedMonth) {
     return (
-      <section className="rounded-3xl border border-white/50 bg-white/60 p-6 shadow-sm backdrop-blur">
-        <h2 className="text-lg font-semibold text-slate-900">
-          Dashboard mensual
-        </h2>
-        <p className="mt-3 text-sm text-slate-600">
-          No hay un mes seleccionado. Crea o selecciona un mes para ver el
-          resumen.
-        </p>
+      <section className="space-y-4">
+        <MonthSelector
+          months={workbook.months}
+          selectedMonthId={selectedMonthId}
+          onSelectMonth={selectMonth}
+          onCreateMonth={createMonth}
+        />
+        <section className="rounded-3xl border border-white/50 bg-white/60 p-6 shadow-sm backdrop-blur">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Dashboard mensual
+          </h2>
+          <p className="mt-3 text-sm text-slate-600">
+            No hay un mes seleccionado. Crea o selecciona un mes para ver el
+            resumen.
+          </p>
+        </section>
       </section>
     )
   }
@@ -57,6 +66,7 @@ export function DashboardPage() {
         months={workbook.months}
         selectedMonthId={selectedMonthId}
         onSelectMonth={selectMonth}
+        onCreateMonth={createMonth}
       />
 
       <SummaryCards summary={summary} />

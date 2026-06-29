@@ -220,12 +220,16 @@ export const useFinanceStore = create<FinanceStore>((set) => ({
       }
 
       const nowIso = getNowIso()
+      const baseSalaryFromLatestMonth =
+        state.workbook.months[0]?.baseSalary ??
+        state.workbook.settings.defaultBaseSalary
+
       const newMonth: MonthFinance = {
         id: createId('month'),
         year,
         month,
         label: getMonthLabel(year, month),
-        baseSalary: state.workbook.settings.defaultBaseSalary,
+        baseSalary: baseSalaryFromLatestMonth,
         extraIncomes: [],
         expenses: [],
         installmentExpenses: [],
