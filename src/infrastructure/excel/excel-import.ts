@@ -148,7 +148,44 @@ function parseNumberValue(value: unknown): number {
     return Number.NaN
   }
 
-  const normalized = text.replace(/\./g, '').replace(',', '.')
+  const compact = text.replace(/\s+/g, '').replace(/[^\d,.-]/g, '')
+  if (!compact || compact === '-' || compact === ',' || compact === '.') {
+    return Number.NaN
+  }
+
+  const hasDot = compact.includes('.')
+  const hasComma = compact.includes(',')
+
+  let normalized = compact
+  if (hasDot && hasComma) {
+    const lastDot = compact.lastIndexOf('.')
+    const lastComma = compact.lastIndexOf(',')
+    const decimalSeparator = lastDot > lastComma ? '.' : ','
+    const thousandSeparator = decimalSeparator === '.' ? ',' : '.'
+    normalized = compact.split(thousandSeparator).join('')
+    if (decimalSeparator === ',') {
+      normalized = normalized.replace(',', '.')
+    }
+  } else if (hasComma || hasDot) {
+    const separator = hasComma ? ',' : '.'
+    const firstIndex = compact.indexOf(separator)
+    const lastIndex = compact.lastIndexOf(separator)
+    const isSingleSeparator = firstIndex === lastIndex
+    const decimalsCount = compact.length - lastIndex - 1
+
+    const shouldTreatAsThousandsSeparator =
+      isSingleSeparator && decimalsCount === 3
+
+    if (shouldTreatAsThousandsSeparator) {
+      normalized = compact.replace(separator, '')
+    } else {
+      normalized = compact
+      if (separator === ',') {
+        normalized = normalized.replace(',', '.')
+      }
+    }
+  }
+
   const parsed = Number(normalized)
   return Number.isFinite(parsed) ? parsed : Number.NaN
 }
