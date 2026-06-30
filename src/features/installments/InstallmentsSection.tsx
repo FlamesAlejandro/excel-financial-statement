@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 
 import { Button } from '../../components/ui/Button'
@@ -72,7 +72,7 @@ function InstallmentExpenseFormDialog({
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     formState: { errors }
   } = useForm<
     InstallmentExpenseFormInput,
@@ -83,8 +83,11 @@ function InstallmentExpenseFormDialog({
     defaultValues: initialValues
   })
 
-  const watchedTotalAmount = watch('totalAmount')
-  const watchedInstallmentsCount = watch('installmentsCount')
+  const watchedTotalAmount = useWatch({ control, name: 'totalAmount' })
+  const watchedInstallmentsCount = useWatch({
+    control,
+    name: 'installmentsCount'
+  })
   const totalAmount =
     typeof watchedTotalAmount === 'number'
       ? watchedTotalAmount

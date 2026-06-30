@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 
 import { Button } from '../../components/ui/Button'
@@ -68,7 +68,7 @@ function PaymentMethodFormDialog({
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { errors }
   } = useForm<PaymentMethodFormInput, undefined, PaymentMethodFormOutput>({
@@ -76,7 +76,7 @@ function PaymentMethodFormDialog({
     defaultValues: initialValues
   })
 
-  const hasMonthlyFee = watch('hasMonthlyFee')
+  const hasMonthlyFee = useWatch({ control, name: 'hasMonthlyFee' })
 
   useEffect(() => {
     if (open) {
