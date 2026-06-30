@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx'
 import { buildFinanceSummary } from '../../domain/finance/calculations'
 import type { FinanceWorkbook, MonthFinance } from '../../domain/finance/types'
 import { sortYearMonthsDesc } from '../../lib/date'
+import { formatLocalDate, formatLocalDateFromIso } from './excel-date'
 import { EXCEL_FORMAT_VERSION } from './excel-version'
 
 const CLP_FORMAT = '$ #,##0'
@@ -135,14 +136,8 @@ function applyNumberFormatByColumn(
   }
 }
 
-function formatDateDisplay(isoDate: string): string {
-  const date = new Date(isoDate)
-  if (Number.isNaN(date.valueOf())) {
-    return isoDate
-  }
-
-  return date.toISOString().slice(0, 10)
-}
+const formatDateDisplay = (isoDate: string): string =>
+  formatLocalDateFromIso(isoDate)
 
 type SummaryDataRow = {
   label: string
@@ -546,17 +541,22 @@ function buildPaymentMethodsSheet(workbook: FinanceWorkbook): XLSX.WorkSheet {
       'createdAt',
       'updatedAt'
     ],
-    ...workbook.paymentMethods.map((method) => [
-      method.id,
-      method.name,
-      method.type,
-      method.isActive,
-      method.hasMonthlyFee,
-      method.monthlyFeeAmount,
-      method.notes || '',
-      formatDateDisplay(method.createdAt),
-      formatDateDisplay(method.updatedAt)
-    ])
+    ...workbook.paymentMethods.map((method) => {
+      const hasMonthlyFee = method.hasMonthlyFee && method.monthlyFeeAmount > 0
+      const monthlyFeeAmount = hasMonthlyFee ? method.monthlyFeeAmount : 0
+
+      return [
+        method.id,
+        method.name,
+        method.type,
+        method.isActive,
+        hasMonthlyFee,
+        monthlyFeeAmount,
+        method.notes || '',
+        formatDateDisplay(method.createdAt),
+        formatDateDisplay(method.updatedAt)
+      ]
+    })
   ]
 
   const sheet = XLSX.utils.aoa_to_sheet(matrix)
@@ -640,7 +640,7 @@ function buildFixedExpensesSheet(workbook: FinanceWorkbook): XLSX.WorkSheet {
 export function buildExcelWorkbook(workbook: FinanceWorkbook): XLSX.WorkBook {
   const xlsxWorkbook = XLSX.utils.book_new()
   const sheetNames = new Set<string>()
-  const exportedAt = new Date().toISOString()
+  const exportedAt = formatLocalDate(new Date())
 
   const summarySheet = buildSummarySheet(workbook, exportedAt)
   XLSX.utils.book_append_sheet(

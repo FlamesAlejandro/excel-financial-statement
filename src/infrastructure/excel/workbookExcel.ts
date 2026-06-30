@@ -2,13 +2,10 @@ import * as XLSX from 'xlsx'
 
 import type { FinanceWorkbook } from '../../domain/finance/types'
 import { buildExcelWorkbook } from './excel-export'
+import { formatLocalDateTimeForFileName } from './excel-date'
 import { importWorkbookFromExcel } from './excel-import'
 import { createDefaultFinanceWorkbook } from './excel-template'
 import { EXCEL_MIME_TYPE } from './excel-version'
-
-function pad2(value: number): string {
-  return String(value).padStart(2, '0')
-}
 
 function triggerDownload(blob: Blob, fileName: string): void {
   const objectUrl = URL.createObjectURL(blob)
@@ -26,14 +23,7 @@ function triggerDownload(blob: Blob, fileName: string): void {
 }
 
 export function buildExportFileName(date: Date = new Date()): string {
-  const year = date.getFullYear()
-  const month = pad2(date.getMonth() + 1)
-  const day = pad2(date.getDate())
-  const hours = pad2(date.getHours())
-  const minutes = pad2(date.getMinutes())
-  const seconds = pad2(date.getSeconds())
-
-  return `estado-financiero-${year}-${month}-${day}_${hours}-${minutes}-${seconds}.xlsx`
+  return `estado-financiero-${formatLocalDateTimeForFileName(date)}.xlsx`
 }
 
 export function exportWorkbookToExcel(workbook: FinanceWorkbook): Blob {

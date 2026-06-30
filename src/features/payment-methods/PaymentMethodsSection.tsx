@@ -240,12 +240,17 @@ export function PaymentMethodsSection() {
   )
 
   const handleSave = (values: PaymentMethodFormOutput) => {
+    const monthlyFeeAmount = values.hasMonthlyFee
+      ? Math.max(0, values.monthlyFeeAmount)
+      : 0
+    const hasMonthlyFee = values.hasMonthlyFee && monthlyFeeAmount > 0
+
     const payload = {
       name: values.name.trim(),
       type: values.type,
       isActive: values.isActive,
-      hasMonthlyFee: values.hasMonthlyFee,
-      monthlyFeeAmount: values.hasMonthlyFee ? values.monthlyFeeAmount : 0,
+      hasMonthlyFee,
+      monthlyFeeAmount,
       notes: values.notes?.trim() || undefined
     }
 
