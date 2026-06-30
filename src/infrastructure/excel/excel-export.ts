@@ -77,98 +77,93 @@ function buildSummaryRows(workbook: FinanceWorkbook) {
 function buildMonthSheetRows(
   month: MonthFinance
 ): Array<Array<string | number | boolean>> {
-  const rows: Array<Array<string | number | boolean>> = []
-
-  rows.push(['Sueldo base'])
-  rows.push(['baseSalary'])
-  rows.push([toCellValue(month.baseSalary)])
-  rows.push([])
-
-  rows.push(['Ingresos adicionales'])
-  rows.push([
-    'id',
-    'date',
-    'description',
-    'amount',
-    'source',
-    'notes',
-    'createdAt',
-    'updatedAt'
+  const extraIncomeRows = month.extraIncomes.map((income) => [
+    toCellValue(income.id),
+    toCellValue(income.date),
+    toCellValue(income.description),
+    toCellValue(income.amount),
+    toCellValue(income.source),
+    toCellValue(income.notes),
+    toCellValue(income.createdAt),
+    toCellValue(income.updatedAt)
   ])
-  month.extraIncomes.forEach((income) => {
-    rows.push([
-      toCellValue(income.id),
-      toCellValue(income.date),
-      toCellValue(income.description),
-      toCellValue(income.amount),
-      toCellValue(income.source),
-      toCellValue(income.notes),
-      toCellValue(income.createdAt),
-      toCellValue(income.updatedAt)
-    ])
-  })
-  rows.push([])
 
-  rows.push(['Gastos normales'])
-  rows.push([
-    'id',
-    'date',
-    'description',
-    'amount',
-    'paymentMethodId',
-    'category',
-    'notes',
-    'createdAt',
-    'updatedAt'
+  const expenseRows = month.expenses.map((expense) => [
+    toCellValue(expense.id),
+    toCellValue(expense.date),
+    toCellValue(expense.description),
+    toCellValue(expense.amount),
+    toCellValue(expense.paymentMethodId),
+    toCellValue(expense.category),
+    toCellValue(expense.notes),
+    toCellValue(expense.createdAt),
+    toCellValue(expense.updatedAt)
   ])
-  month.expenses.forEach((expense) => {
-    rows.push([
-      toCellValue(expense.id),
-      toCellValue(expense.date),
-      toCellValue(expense.description),
-      toCellValue(expense.amount),
-      toCellValue(expense.paymentMethodId),
-      toCellValue(expense.category),
-      toCellValue(expense.notes),
-      toCellValue(expense.createdAt),
-      toCellValue(expense.updatedAt)
-    ])
-  })
-  rows.push([])
 
-  rows.push(['Gastos en cuotas'])
-  rows.push([
-    'id',
-    'purchaseDate',
-    'description',
-    'totalAmount',
-    'installmentsCount',
-    'installmentAmount',
-    'paymentMethodId',
-    'category',
-    'notes',
-    'isActive',
-    'createdAt',
-    'updatedAt'
+  const installmentRows = month.installmentExpenses.map((installment) => [
+    toCellValue(installment.id),
+    toCellValue(installment.purchaseDate),
+    toCellValue(installment.description),
+    toCellValue(installment.totalAmount),
+    toCellValue(installment.installmentsCount),
+    toCellValue(installment.installmentAmount),
+    toCellValue(installment.paymentMethodId),
+    toCellValue(installment.category),
+    toCellValue(installment.notes),
+    toCellValue(installment.isActive),
+    toCellValue(installment.createdAt),
+    toCellValue(installment.updatedAt)
   ])
-  month.installmentExpenses.forEach((installment) => {
-    rows.push([
-      toCellValue(installment.id),
-      toCellValue(installment.purchaseDate),
-      toCellValue(installment.description),
-      toCellValue(installment.totalAmount),
-      toCellValue(installment.installmentsCount),
-      toCellValue(installment.installmentAmount),
-      toCellValue(installment.paymentMethodId),
-      toCellValue(installment.category),
-      toCellValue(installment.notes),
-      toCellValue(installment.isActive),
-      toCellValue(installment.createdAt),
-      toCellValue(installment.updatedAt)
-    ])
-  })
 
-  return rows
+  return [
+    ['Sueldo base'],
+    ['baseSalary'],
+    [toCellValue(month.baseSalary)],
+    [],
+    ['Ingresos adicionales'],
+    [
+      'id',
+      'date',
+      'description',
+      'amount',
+      'source',
+      'notes',
+      'createdAt',
+      'updatedAt'
+    ],
+    ...extraIncomeRows,
+    [],
+    ['Gastos normales'],
+    [
+      'id',
+      'date',
+      'description',
+      'amount',
+      'paymentMethodId',
+      'category',
+      'notes',
+      'createdAt',
+      'updatedAt'
+    ],
+    ...expenseRows,
+    [],
+    ['Gastos en cuotas'],
+    [
+      'id',
+      'purchaseDate',
+      'description',
+      'totalAmount',
+      'installmentsCount',
+      'installmentAmount',
+      'paymentMethodId',
+      'category',
+      'notes',
+      'isActive',
+      'createdAt',
+      'updatedAt'
+    ],
+    ...installmentRows
+  ]
 }
 
 export function buildExcelWorkbook(workbook: FinanceWorkbook): XLSX.WorkBook {
