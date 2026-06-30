@@ -12,7 +12,8 @@ import { Input } from '../../components/ui/Input'
 import { SectionHeader } from '../../components/ui/SectionHeader'
 
 const salarySchema = z.object({
-  baseSalary: z.coerce.number().min(0, 'El sueldo debe ser mayor o igual a 0')
+  baseSalary: z.coerce.number().min(0, 'El sueldo debe ser mayor o igual a 0'),
+  applyMode: z.enum(['single', 'forward'])
 })
 
 type SalaryFormInput = z.input<typeof salarySchema>
@@ -23,6 +24,9 @@ export function SalarySection() {
   const selectedMonthId = useFinanceStore((state) => state.selectedMonthId)
   const updateMonthBaseSalary = useFinanceStore(
     (state) => state.updateMonthBaseSalary
+  )
+  const updateMonthBaseSalaryFromMonthForward = useFinanceStore(
+    (state) => state.updateMonthBaseSalaryFromMonthForward
   )
 
   const selectedMonth = workbook.months.find(
@@ -36,12 +40,16 @@ export function SalarySection() {
   >({
     resolver: zodResolver(salarySchema),
     defaultValues: {
-      baseSalary: selectedMonth?.baseSalary ?? 0
+      baseSalary: selectedMonth?.baseSalary ?? 0,
+      applyMode: 'single'
     }
   })
 
   useEffect(() => {
-    reset({ baseSalary: selectedMonth?.baseSalary ?? 0 })
+    reset({
+      baseSalary: selectedMonth?.baseSalary ?? 0,
+      applyMode: 'single'
+    })
   }, [reset, selectedMonth?.baseSalary, selectedMonth?.id])
 
   if (!selectedMonth) {
@@ -63,6 +71,11 @@ export function SalarySection() {
   )
 
   const onSubmit = (values: SalaryFormOutput) => {
+    if (values.applyMode === 'forward') {
+      updateMonthBaseSalaryFromMonthForward(selectedMonth.id, values.baseSalary)
+      return
+    }
+
     updateMonthBaseSalary(selectedMonth.id, values.baseSalary)
   }
 
@@ -87,6 +100,20 @@ export function SalarySection() {
               {formState.errors.baseSalary.message}
             </p>
           ) : null}
+
+          <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-3">
+            <p className="text-sm font-semibold text-slate-800">
+              Aplicar sueldo base
+            </p>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="radio" value="single" {...register('applyMode')} />
+              Guardar solo en este mes
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="radio" value="forward" {...register('applyMode')} />
+              Guardar desde este mes hacia adelante
+            </label>
+          </div>
 
           <div className="flex flex-wrap gap-3">
             <Button type="submit">Guardar sueldo</Button>

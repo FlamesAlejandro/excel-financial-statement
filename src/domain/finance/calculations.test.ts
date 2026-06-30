@@ -159,6 +159,8 @@ function createBaseData() {
       name: 'Internet',
       amount: 20_000,
       paymentMethodId: 'pm_transfer',
+      startYear: 2026,
+      startMonth: 6,
       isActive: true,
       createdAt: june.createdAt,
       updatedAt: june.updatedAt
@@ -168,6 +170,8 @@ function createBaseData() {
       name: 'Gym',
       amount: 30_000,
       paymentMethodId: 'pm_cc',
+      startYear: 2026,
+      startMonth: 6,
       isActive: false,
       createdAt: june.createdAt,
       updatedAt: june.updatedAt
@@ -284,5 +288,64 @@ describe('installment charges', () => {
 
     const julyCharges = getInstallmentChargesForMonth(july, allMonths)
     expect(julyCharges).toHaveLength(0)
+  })
+})
+
+describe('fixed expense validity', () => {
+  it('incluye gastos fijos solo dentro de su rango de vigencia', () => {
+    const { june, july, august, paymentMethods, allMonths } = createBaseData()
+
+    const fixedExpenses: FixedExpense[] = [
+      {
+        id: 'fx_july_only',
+        name: 'Seguro',
+        amount: 15_000,
+        paymentMethodId: 'pm_cc',
+        startYear: 2026,
+        startMonth: 7,
+        endYear: 2026,
+        endMonth: 7,
+        isActive: true,
+        createdAt: june.createdAt,
+        updatedAt: june.updatedAt
+      },
+      {
+        id: 'fx_until_july',
+        name: 'Streaming',
+        amount: 10_000,
+        paymentMethodId: 'pm_transfer',
+        startYear: 2026,
+        startMonth: 6,
+        endYear: 2026,
+        endMonth: 7,
+        isActive: true,
+        createdAt: june.createdAt,
+        updatedAt: june.updatedAt
+      }
+    ]
+
+    const juneSummary = buildFinanceSummary(
+      june,
+      fixedExpenses,
+      paymentMethods,
+      allMonths
+    )
+    expect(juneSummary.fixedExpensesTotal).toBe(10_000)
+
+    const julySummary = buildFinanceSummary(
+      july,
+      fixedExpenses,
+      paymentMethods,
+      allMonths
+    )
+    expect(julySummary.fixedExpensesTotal).toBe(25_000)
+
+    const augustSummary = buildFinanceSummary(
+      august,
+      fixedExpenses,
+      paymentMethods,
+      allMonths
+    )
+    expect(augustSummary.fixedExpensesTotal).toBe(0)
   })
 })

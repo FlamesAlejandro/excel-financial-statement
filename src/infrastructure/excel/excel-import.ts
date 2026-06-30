@@ -56,6 +56,11 @@ type ParseFixedExpensesResult = {
   warnings: string[]
 }
 
+type YearMonth = {
+  year: number
+  month: number
+}
+
 type ParseMonthSheetResult = {
   month: MonthFinance | null
   errors: string[]
@@ -396,7 +401,8 @@ export function parsePaymentMethodsSheet(
 }
 
 export function parseFixedExpensesSheet(
-  worksheet: XLSX.WorkSheet
+  worksheet: XLSX.WorkSheet,
+  fallbackStartMonth: YearMonth
 ): ParseFixedExpensesResult {
   const nowIso = new Date().toISOString()
   const errors: string[] = []
@@ -419,6 +425,63 @@ export function parseFixedExpensesSheet(
       errors.push(`Monto inválido en gasto fijo fila ${index + 2}.`)
     }
 
+    const startYearRaw = parseNumberValue(row.startYear)
+    const startMonthRaw = parseNumberValue(row.startMonth)
+    const hasStartYear = !Number.isNaN(startYearRaw)
+    const hasStartMonth = !Number.isNaN(startMonthRaw)
+    const hasValidStartYear = hasStartYear && startYearRaw >= 1970
+    const hasValidStartMonth =
+      hasStartMonth && startMonthRaw >= 1 && startMonthRaw <= 12
+
+    let startYear = fallbackStartMonth.year
+    let startMonth = fallbackStartMonth.month
+
+    if (hasValidStartYear && hasValidStartMonth) {
+      startYear = startYearRaw
+      startMonth = startMonthRaw
+    } else if (!hasStartYear && !hasStartMonth) {
+      warnings.push(
+        `Falta inicio de vigencia en gasto fijo fila ${index + 2}. Se usó ${fallbackStartMonth.month}/${fallbackStartMonth.year}.`
+      )
+    } else {
+      warnings.push(
+        `Inicio de vigencia inválido en gasto fijo fila ${index + 2}. Se usó ${fallbackStartMonth.month}/${fallbackStartMonth.year}.`
+      )
+    }
+
+    const endYearRaw = parseNumberValue(row.endYear)
+    const endMonthRaw = parseNumberValue(row.endMonth)
+    const hasEndYear = !Number.isNaN(endYearRaw)
+    const hasEndMonth = !Number.isNaN(endMonthRaw)
+
+    let endYear: number | undefined
+    let endMonth: number | undefined
+
+    if (hasEndYear && hasEndMonth) {
+      const isValidEndYear = endYearRaw >= 1970
+      const isValidEndMonth = endMonthRaw >= 1 && endMonthRaw <= 12
+      if (isValidEndYear && isValidEndMonth) {
+        const startKey = startYear * 12 + (startMonth - 1)
+        const endKey = endYearRaw * 12 + (endMonthRaw - 1)
+        if (endKey < startKey) {
+          warnings.push(
+            `Término anterior al inicio en gasto fijo fila ${index + 2}. Se ignoró término.`
+          )
+        } else {
+          endYear = endYearRaw
+          endMonth = endMonthRaw
+        }
+      } else {
+        warnings.push(
+          `Término de vigencia inválido en gasto fijo fila ${index + 2}. Se ignoró término.`
+        )
+      }
+    } else if (hasEndYear || hasEndMonth) {
+      warnings.push(
+        `Término incompleto en gasto fijo fila ${index + 2}. Se ignoró término.`
+      )
+    }
+
     const estimatedChargeDay = parseNumberValue(row.estimatedChargeDay)
     if (
       !Number.isNaN(estimatedChargeDay) &&
@@ -434,6 +497,10 @@ export function parseFixedExpensesSheet(
       name,
       amount: Number.isNaN(amount) || amount < 0 ? 0 : amount,
       paymentMethodId: toStringValue(row.paymentMethodId),
+      startYear,
+      startMonth,
+      endYear,
+      endMonth,
       estimatedChargeDay:
         Number.isNaN(estimatedChargeDay) ||
         estimatedChargeDay < 1 ||
@@ -777,6 +844,44 @@ export function validateImportedWorkbook(workbook: FinanceWorkbook): {
       errors.push(`Monto inválido en gasto fijo ${fixedExpense.id}.`)
     }
 
+    if (fixedExpense.startYear < 1970) {
+      errors.push(`startYear inválido en gasto fijo ${fixedExpense.id}.`)
+    }
+
+    if (fixedExpense.startMonth < 1 || fixedExpense.startMonth > 12) {
+      errors.push(`startMonth inválido en gasto fijo ${fixedExpense.id}.`)
+    }
+
+    const hasEndYear = fixedExpense.endYear !== undefined
+    const hasEndMonth = fixedExpense.endMonth !== undefined
+    if (hasEndYear !== hasEndMonth) {
+      errors.push(`Término incompleto en gasto fijo ${fixedExpense.id}.`)
+    }
+
+    if (hasEndYear && hasEndMonth) {
+      if ((fixedExpense.endYear as number) < 1970) {
+        errors.push(`endYear inválido en gasto fijo ${fixedExpense.id}.`)
+      }
+
+      if (
+        (fixedExpense.endMonth as number) < 1 ||
+        (fixedExpense.endMonth as number) > 12
+      ) {
+        errors.push(`endMonth inválido en gasto fijo ${fixedExpense.id}.`)
+      }
+
+      const startKey =
+        fixedExpense.startYear * 12 + (fixedExpense.startMonth - 1)
+      const endKey =
+        (fixedExpense.endYear as number) * 12 +
+        ((fixedExpense.endMonth as number) - 1)
+      if (endKey < startKey) {
+        errors.push(
+          `Término anterior al inicio en gasto fijo ${fixedExpense.id}.`
+        )
+      }
+    }
+
     if (!paymentMethodIdSet.has(fixedExpense.paymentMethodId)) {
       errors.push(
         `paymentMethodId inexistente en gasto fijo ${fixedExpense.id}: ${fixedExpense.paymentMethodId}.`
@@ -959,10 +1064,21 @@ export async function importWorkbookFromExcel(
 
   const configParse = parseConfigSheet(configSheet)
   const paymentMethodsParse = parsePaymentMethodsSheet(paymentMethodsSheet)
-  const fixedExpensesParse = parseFixedExpensesSheet(fixedExpensesSheet)
   const monthsParse = parseMonthSheets({
     sheetNames,
     sheets: xlsxWorkbook.Sheets
+  })
+
+  const fallbackStartMonth = monthsParse.months.length
+    ? monthsParse.months[monthsParse.months.length - 1]
+    : {
+        year: new Date().getFullYear(),
+        month: new Date().getMonth() + 1
+      }
+
+  const fixedExpensesParse = parseFixedExpensesSheet(fixedExpensesSheet, {
+    year: fallbackStartMonth.year,
+    month: fallbackStartMonth.month
   })
 
   errors.push(

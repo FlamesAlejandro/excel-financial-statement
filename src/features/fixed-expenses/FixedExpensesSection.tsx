@@ -15,16 +15,60 @@ import { Textarea } from '../../components/ui/Textarea'
 import { formatCurrencyCLP } from '../../lib/money'
 import { useFinanceStore } from '../../store/finance-store'
 
-const fixedExpenseSchema = z.object({
-  name: z.string().trim().min(1, 'El nombre es obligatorio'),
-  amount: z.coerce.number().min(0, 'El monto debe ser mayor o igual a 0'),
-  paymentMethodId: z.string().min(1, 'El método de pago es obligatorio'),
-  estimatedChargeDay: z
-    .union([z.coerce.number().int().min(1).max(31), z.literal('')])
-    .optional(),
-  isActive: z.boolean(),
-  notes: z.string().optional()
-})
+const fixedExpenseSchema = z
+  .object({
+    name: z.string().trim().min(1, 'El nombre es obligatorio'),
+    amount: z.coerce.number().min(0, 'El monto debe ser mayor o igual a 0'),
+    paymentMethodId: z.string().min(1, 'El método de pago es obligatorio'),
+    startYear: z.coerce.number().int().min(1970).max(9999),
+    startMonth: z.coerce.number().int().min(1).max(12),
+    endYear: z.union([
+      z.coerce.number().int().min(1970).max(9999),
+      z.literal('')
+    ]),
+    endMonth: z.union([z.coerce.number().int().min(1).max(12), z.literal('')]),
+    estimatedChargeDay: z
+      .union([z.coerce.number().int().min(1).max(31), z.literal('')])
+      .optional(),
+    isActive: z.boolean(),
+    notes: z.string().optional()
+  })
+  .superRefine((values, ctx) => {
+    const hasEndYear = values.endYear !== ''
+    const hasEndMonth = values.endMonth !== ''
+
+    if (hasEndYear !== hasEndMonth) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Completa año y mes de término, o deja ambos vacíos.',
+        path: ['endYear']
+      })
+      return
+    }
+
+    if (!hasEndYear || !hasEndMonth) {
+      return
+    }
+
+    if (
+      typeof values.endYear !== 'number' ||
+      typeof values.endMonth !== 'number'
+    ) {
+      return
+    }
+
+    const endYear = values.endYear
+    const endMonth = values.endMonth
+    const startKey = values.startYear * 12 + (values.startMonth - 1)
+    const endKey = endYear * 12 + (endMonth - 1)
+    if (endKey < startKey) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El término no puede ser anterior al inicio.',
+        path: ['endYear']
+      })
+    }
+  })
 
 type FixedExpenseFormInput = z.input<typeof fixedExpenseSchema>
 type FixedExpenseFormOutput = z.output<typeof fixedExpenseSchema>
@@ -42,6 +86,10 @@ const emptyFixedExpenseValues: FixedExpenseFormOutput = {
   name: '',
   amount: 0,
   paymentMethodId: '',
+  startYear: new Date().getFullYear(),
+  startMonth: new Date().getMonth() + 1,
+  endYear: '',
+  endMonth: '',
   estimatedChargeDay: '',
   isActive: true,
   notes: ''
@@ -116,6 +164,56 @@ function FixedExpenseFormDialog({
           </p>
         ) : null}
 
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input
+            label="Inicio - Año"
+            type="number"
+            min={1970}
+            max={9999}
+            step="1"
+            {...register('startYear')}
+          />
+          <Input
+            label="Inicio - Mes"
+            type="number"
+            min={1}
+            max={12}
+            step="1"
+            {...register('startMonth')}
+          />
+        </div>
+        {errors.startYear ? (
+          <p className="text-sm text-rose-600">{errors.startYear.message}</p>
+        ) : null}
+        {errors.startMonth ? (
+          <p className="text-sm text-rose-600">{errors.startMonth.message}</p>
+        ) : null}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input
+            label="Término - Año (opcional)"
+            type="number"
+            min={1970}
+            max={9999}
+            step="1"
+            {...register('endYear')}
+          />
+          <Input
+            label="Término - Mes (opcional)"
+            type="number"
+            min={1}
+            max={12}
+            step="1"
+            {...register('endMonth')}
+          />
+        </div>
+        {errors.endYear ? (
+          <p className="text-sm text-rose-600">{errors.endYear.message}</p>
+        ) : null}
+        {errors.endMonth ? (
+          <p className="text-sm text-rose-600">{errors.endMonth.message}</p>
+        ) : null}
+
         <Input
           label="Día estimado de cobro"
           type="number"
@@ -154,6 +252,7 @@ function FixedExpenseFormDialog({
 
 export function FixedExpensesSection() {
   const workbook = useFinanceStore((state) => state.workbook)
+  const selectedMonthId = useFinanceStore((state) => state.selectedMonthId)
   const addFixedExpense = useFinanceStore((state) => state.addFixedExpense)
   const updateFixedExpense = useFinanceStore(
     (state) => state.updateFixedExpense
@@ -188,6 +287,13 @@ export function FixedExpensesSection() {
     [workbook.fixedExpenses]
   )
 
+  const selectedMonth = workbook.months.find(
+    (month) => month.id === selectedMonthId
+  )
+
+  const defaultStartYear = selectedMonth?.year ?? new Date().getFullYear()
+  const defaultStartMonth = selectedMonth?.month ?? new Date().getMonth() + 1
+
   const openCreateModal = () => {
     setEditingFixedExpense(null)
     setIsFormOpen(true)
@@ -210,15 +316,26 @@ export function FixedExpensesSection() {
             name: editingFixedExpense.name,
             amount: editingFixedExpense.amount,
             paymentMethodId: editingFixedExpense.paymentMethodId,
+            startYear: editingFixedExpense.startYear,
+            startMonth: editingFixedExpense.startMonth,
+            endYear: editingFixedExpense.endYear ?? '',
+            endMonth: editingFixedExpense.endMonth ?? '',
             estimatedChargeDay: editingFixedExpense.estimatedChargeDay ?? '',
             isActive: editingFixedExpense.isActive,
             notes: editingFixedExpense.notes ?? ''
           }
         : {
             ...emptyFixedExpenseValues,
+            startYear: defaultStartYear,
+            startMonth: defaultStartMonth,
             paymentMethodId: activePaymentMethods[0]?.id ?? ''
           },
-    [activePaymentMethods, editingFixedExpense]
+    [
+      activePaymentMethods,
+      defaultStartMonth,
+      defaultStartYear,
+      editingFixedExpense
+    ]
   )
 
   const handleSave = (values: FixedExpenseFormOutput) => {
@@ -226,6 +343,10 @@ export function FixedExpensesSection() {
       name: values.name.trim(),
       amount: values.amount,
       paymentMethodId: values.paymentMethodId,
+      startYear: values.startYear,
+      startMonth: values.startMonth,
+      endYear: values.endYear === '' ? undefined : values.endYear,
+      endMonth: values.endMonth === '' ? undefined : values.endMonth,
       estimatedChargeDay:
         values.estimatedChargeDay === ''
           ? undefined
@@ -268,6 +389,10 @@ export function FixedExpensesSection() {
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
                     {fixedExpense.isActive ? 'Activo' : 'Inactivo'}
+                    {` · Inicio ${fixedExpense.startMonth}/${fixedExpense.startYear}`}
+                    {fixedExpense.endYear && fixedExpense.endMonth
+                      ? ` · Término ${fixedExpense.endMonth}/${fixedExpense.endYear}`
+                      : ' · Sin término'}
                     {fixedExpense.estimatedChargeDay
                       ? ` · Día ${fixedExpense.estimatedChargeDay}`
                       : ''}

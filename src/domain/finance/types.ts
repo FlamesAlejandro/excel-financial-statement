@@ -63,6 +63,10 @@ export interface FixedExpense {
   name: string
   amount: number
   paymentMethodId: string
+  startYear: number
+  startMonth: number
+  endYear?: number
+  endMonth?: number
   estimatedChargeDay?: number
   isActive: boolean
   notes?: string

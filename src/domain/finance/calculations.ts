@@ -23,6 +23,44 @@ function getMonthsDiff(from: YearMonth, to: YearMonth): number {
   return (to.year - from.year) * 12 + (to.month - from.month)
 }
 
+function compareYearMonth(a: YearMonth, b: YearMonth): number {
+  const aKey = a.year * 12 + (a.month - 1)
+  const bKey = b.year * 12 + (b.month - 1)
+  return aKey - bKey
+}
+
+function isFixedExpenseActiveForMonth(
+  fixedExpense: FixedExpense,
+  targetMonth: YearMonth
+): boolean {
+  if (!fixedExpense.isActive) {
+    return false
+  }
+
+  const startsAt: YearMonth = {
+    year: fixedExpense.startYear,
+    month: fixedExpense.startMonth
+  }
+
+  if (compareYearMonth(targetMonth, startsAt) < 0) {
+    return false
+  }
+
+  if (
+    fixedExpense.endYear === undefined ||
+    fixedExpense.endMonth === undefined
+  ) {
+    return true
+  }
+
+  const endsAt: YearMonth = {
+    year: fixedExpense.endYear,
+    month: fixedExpense.endMonth
+  }
+
+  return compareYearMonth(targetMonth, endsAt) <= 0
+}
+
 function parseIsoYearMonth(dateText: string): YearMonth | null {
   const match = dateText.match(/^(\d{4})-(\d{2})-\d{2}/)
   if (!match) {
@@ -53,11 +91,17 @@ export function getNormalExpensesTotal(month: MonthFinance): number {
 }
 
 export function getActiveFixedExpensesTotal(
+  targetMonth: MonthFinance,
   fixedExpenses: FixedExpense[]
 ): number {
   return sumAmounts(
     fixedExpenses
-      .filter((fixedExpense) => fixedExpense.isActive)
+      .filter((fixedExpense) =>
+        isFixedExpenseActiveForMonth(fixedExpense, {
+          year: targetMonth.year,
+          month: targetMonth.month
+        })
+      )
       .map((fixedExpense) => fixedExpense.amount)
   )
 }
@@ -142,7 +186,7 @@ export function getTotalExpensesForMonth(
   allMonths: MonthFinance[]
 ): number {
   const normalExpensesTotal = getNormalExpensesTotal(month)
-  const fixedExpensesTotal = getActiveFixedExpensesTotal(fixedExpenses)
+  const fixedExpensesTotal = getActiveFixedExpensesTotal(month, fixedExpenses)
   const paymentMethodsMonthlyFeesTotal =
     getPaymentMethodsMonthlyFeesTotal(paymentMethods)
   const installmentsTotal = getInstallmentsTotalForMonth(month, allMonths)
@@ -177,7 +221,7 @@ export function buildFinanceSummary(
   const extraIncomeTotal = getExtraIncomeTotal(month)
   const totalAvailable = getTotalAvailableForMonth(month)
   const normalExpensesTotal = getNormalExpensesTotal(month)
-  const fixedExpensesTotal = getActiveFixedExpensesTotal(fixedExpenses)
+  const fixedExpensesTotal = getActiveFixedExpensesTotal(month, fixedExpenses)
   const paymentMethodsMonthlyFeesTotal =
     getPaymentMethodsMonthlyFeesTotal(paymentMethods)
   const installmentsTotal = getInstallmentsTotalForMonth(month, allMonths)
@@ -219,7 +263,12 @@ export function getExpensesGroupedByPaymentMethod(
   }
 
   for (const fixedExpense of fixedExpenses) {
-    if (fixedExpense.isActive) {
+    if (
+      isFixedExpenseActiveForMonth(fixedExpense, {
+        year: month.year,
+        month: month.month
+      })
+    ) {
       addAmount(fixedExpense.paymentMethodId, fixedExpense.amount)
     }
   }

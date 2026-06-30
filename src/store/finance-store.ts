@@ -69,6 +69,10 @@ interface FinanceStoreActions {
   selectMonth: (monthId: string) => void
   createMonth: (year: number, month: number) => void
   updateMonthBaseSalary: (monthId: string, baseSalary: number) => void
+  updateMonthBaseSalaryFromMonthForward: (
+    monthId: string,
+    baseSalary: number
+  ) => void
 
   addExpense: (monthId: string, input: ExpenseInput) => void
   updateExpense: (
@@ -155,6 +159,15 @@ const updateWorkbookMetadata = (
 
 const isValidMonthNumber = (month: number): month is MonthNumber =>
   Number.isInteger(month) && month >= 1 && month <= 12
+
+const compareYearMonth = (
+  left: { year: number; month: number },
+  right: { year: number; month: number }
+): number => {
+  const leftKey = left.year * 12 + (left.month - 1)
+  const rightKey = right.year * 12 + (right.month - 1)
+  return leftKey - rightKey
+}
 
 const mapMonthById = (
   workbook: FinanceWorkbook,
@@ -337,6 +350,50 @@ export const useFinanceStore = create<FinanceStore>((set) => ({
         selectedMonthId: getValidSelectedMonthId(
           state.selectedMonthId,
           nextWorkbook.months
+        ),
+        hasUnsavedChanges: true
+      }
+    })
+  },
+
+  updateMonthBaseSalaryFromMonthForward: (monthId, baseSalary) => {
+    set((state) => {
+      const baseMonth = state.workbook.months.find(
+        (month) => month.id === monthId
+      )
+      if (!baseMonth) {
+        return state
+      }
+
+      const nowIso = getNowIso()
+      const workbook = updateWorkbookMetadata(
+        {
+          ...state.workbook,
+          months: state.workbook.months.map((month) => {
+            if (
+              compareYearMonth(
+                { year: month.year, month: month.month },
+                { year: baseMonth.year, month: baseMonth.month }
+              ) < 0
+            ) {
+              return month
+            }
+
+            return {
+              ...month,
+              baseSalary,
+              updatedAt: nowIso
+            }
+          })
+        },
+        nowIso
+      )
+
+      return {
+        workbook,
+        selectedMonthId: getValidSelectedMonthId(
+          state.selectedMonthId,
+          workbook.months
         ),
         hasUnsavedChanges: true
       }
