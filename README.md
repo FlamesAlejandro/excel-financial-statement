@@ -1,75 +1,83 @@
-# React + TypeScript + Vite
+# Excel Financial Statement
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación local-first para gestionar estado financiero mensual: ingresos, gastos, gastos fijos, cuotas y métodos de pago, con importación y exportación en Excel.
 
-Currently, two official plugins are available:
+## Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Gestión mensual de sueldo base e ingresos adicionales.
+- Registro de gastos normales y gastos en cuotas.
+- Gestión de gastos fijos con vigencia (inicio y término opcional).
+- Gestión de métodos de pago (con o sin cargo mensual).
+- Dashboard con resumen mensual y dinero restante.
+- Exportación a Excel con hojas de resumen, meses y configuración.
+- Importación desde Excel con validaciones y compatibilidad por nombre de hoja.
+- Flujo local-first, sin backend.
 
-## React Compiler
+## Stack técnico
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 + TypeScript + Vite
+- Zustand para estado global
+- React Hook Form + Zod para formularios y validación
+- SheetJS (xlsx) para import/export Excel
+- Vitest para testing
+- ESLint para calidad de código
 
-## Expanding the ESLint configuration
+## Requisitos
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js 20+
+- npm 10+
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Instalación
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts disponibles
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Desarrollo
+npm run dev
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Tests
+npm run test
 
+# Lint
+npm run lint
+
+# Build producción
+npm run build
+
+# Previsualizar build
+npm run preview
 ```
+
+## Flujo de uso
+
+1. Crea o carga tu workbook financiero.
+2. Configura métodos de pago y gastos fijos.
+3. Registra movimientos del mes (ingresos, gastos, cuotas).
+4. Revisa resumen y disponible en dashboard.
+5. Exporta a Excel para respaldo o análisis.
+
+## Estructura del proyecto
+
+```text
+src/
+  app/                # Estructura principal de la UI
+  components/         # Componentes reutilizables
+  domain/finance/     # Tipos, cálculos y factories del dominio
+  features/           # Módulos funcionales (salary, expenses, installments, etc.)
+  infrastructure/excel/ # Importación/exportación Excel
+  store/              # Estado global (Zustand)
+```
+
+## Estado actual
+
+- Tests y build configurados y funcionando.
+- Lógica de negocio orientada a control mensual y exportación robusta.
+- Importación basada en nombres de hoja, no en orden, para mayor compatibilidad.
+
+## Licencia
+
+Uso privado/proyecto personal.
