@@ -12,11 +12,7 @@ import { useFinanceStore } from '../../store/finance-store'
 const actions = [
   'Cargar Excel',
   'Descargar Excel base',
-  'Exportar Excel actualizado',
-  'Agregar gasto',
-  'Agregar ingreso',
-  'Administrar metodos de pago',
-  'Administrar gastos fijos'
+  'Exportar Excel actualizado'
 ]
 
 export function ActionGrid() {
@@ -104,9 +100,11 @@ export function ActionGrid() {
         onChange={handleExcelFileChange}
       />
 
-      <h2 className="text-lg font-semibold text-slate-900">Acciones rapidas</h2>
+      <h2 className="text-lg font-semibold text-slate-900">
+        Archivo financiero
+      </h2>
       <p className="mt-1 text-sm text-slate-700">
-        Botones visuales iniciales para preparar los siguientes pasos de la app.
+        Carga, descarga y exportación del archivo financiero.
       </p>
       {fileName ? (
         <p className="mt-1 text-xs text-slate-600">

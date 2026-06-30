@@ -62,6 +62,8 @@ function ExpenseFormDialog({
   onClose,
   onSubmit
 }: ExpenseFormDialogProps) {
+  const hasNoPaymentMethods = paymentMethods.length === 0
+
   const {
     register,
     handleSubmit,
@@ -79,6 +81,10 @@ function ExpenseFormDialog({
   }, [initialValues, open, reset])
 
   const submitForm = (values: ExpenseFormOutput) => {
+    if (hasNoPaymentMethods) {
+      return
+    }
+
     onSubmit(values)
     onClose()
   }
@@ -86,6 +92,12 @@ function ExpenseFormDialog({
   return (
     <Modal open={open} title={title} onClose={onClose}>
       <form className="space-y-4" onSubmit={handleSubmit(submitForm)}>
+        {hasNoPaymentMethods ? (
+          <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Crea un método de pago antes de registrar gastos.
+          </p>
+        ) : null}
+
         <Input label="Fecha" type="date" {...register('date')} />
         {errors.date ? (
           <p className="text-sm text-rose-600">{errors.date.message}</p>
@@ -107,7 +119,11 @@ function ExpenseFormDialog({
           <p className="text-sm text-rose-600">{errors.amount.message}</p>
         ) : null}
 
-        <Select label="Método de pago" {...register('paymentMethodId')}>
+        <Select
+          label="Método de pago"
+          disabled={hasNoPaymentMethods}
+          {...register('paymentMethodId')}
+        >
           <option value="">Selecciona un método</option>
           {paymentMethods.map((method) => (
             <option key={method.id} value={method.id}>
@@ -132,7 +148,9 @@ function ExpenseFormDialog({
           >
             Cancelar
           </Button>
-          <Button type="submit">Guardar</Button>
+          <Button type="submit" disabled={hasNoPaymentMethods}>
+            Guardar
+          </Button>
         </div>
       </form>
     </Modal>
@@ -240,6 +258,12 @@ export function ExpensesSection() {
         description={`Mes seleccionado: ${selectedMonth.label}`}
         actions={<Button onClick={openCreateModal}>Agregar gasto</Button>}
       />
+
+      {activePaymentMethods.length === 0 ? (
+        <p className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          Crea un método de pago antes de registrar gastos.
+        </p>
+      ) : null}
 
       {expenses.length === 0 ? (
         <p className="mt-4 text-sm text-slate-600">
