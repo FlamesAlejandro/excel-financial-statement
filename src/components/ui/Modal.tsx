@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 type ModalProps = {
   open: boolean
@@ -19,8 +20,12 @@ export function Modal({
     return null
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+  if (typeof document === 'undefined') {
+    return null
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4 py-6">
       <button
         type="button"
         aria-label="Cerrar modal"
@@ -32,7 +37,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         className={[
-          'relative z-10 w-full max-w-lg rounded-3xl border border-white/40 bg-white p-6 shadow-2xl',
+          'relative z-[1001] w-full max-w-lg rounded-3xl border border-white/40 bg-white p-6 shadow-2xl',
           className
         ]
           .filter(Boolean)
@@ -52,6 +57,7 @@ export function Modal({
         </div>
         <div className="mt-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
