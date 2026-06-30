@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 import { getMonthLabel, sortYearMonthsDesc } from '../lib/date'
 import { createId } from '../lib/ids'
+import { createEmptyFinanceWorkbook } from '../domain/finance/factories'
 import { createMockFinanceWorkbook } from '../domain/finance/mock'
 import type {
   Expense,
@@ -63,6 +64,7 @@ interface FinanceStoreActions {
     errors: string[]
     warnings: string[]
   }) => void
+  resetToEmptyWorkbook: () => void
   resetToMockWorkbook: () => void
   selectMonth: (monthId: string) => void
   createMonth: (year: number, month: number) => void
@@ -127,7 +129,7 @@ const normalizeWorkbookMonths = (
 })
 
 const createInitialState = (): FinanceStoreState => {
-  const workbook = normalizeWorkbookMonths(createMockFinanceWorkbook())
+  const workbook = normalizeWorkbookMonths(createEmptyFinanceWorkbook())
 
   return {
     workbook,
@@ -235,9 +237,22 @@ export const useFinanceStore = create<FinanceStore>((set) => ({
     }))
   },
 
-  resetToMockWorkbook: () => {
+  resetToEmptyWorkbook: () => {
     const initial = createInitialState()
     set(() => initial)
+  },
+
+  resetToMockWorkbook: () => {
+    const workbook = normalizeWorkbookMonths(createMockFinanceWorkbook())
+    set(() => ({
+      workbook,
+      selectedMonthId: workbook.months[0]?.id ?? null,
+      fileName: null,
+      isLoading: false,
+      importErrors: [],
+      importWarnings: [],
+      hasUnsavedChanges: false
+    }))
   },
 
   selectMonth: (monthId) => {

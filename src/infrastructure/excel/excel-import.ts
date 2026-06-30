@@ -605,16 +605,21 @@ export function parseMonthSheet(
         )
       }
 
-      const safeInstallmentAmount =
+      const hasInvalidInstallmentAmount =
         Number.isNaN(installmentAmount) || installmentAmount <= 0
-          ? Number.isNaN(totalAmount) ||
-            Number.isNaN(installmentsCount) ||
-            installmentsCount <= 0
-            ? 0
-            : totalAmount / installmentsCount
-          : installmentAmount
+      const canRecalculateInstallmentAmount =
+        !Number.isNaN(totalAmount) &&
+        !Number.isNaN(installmentsCount) &&
+        installmentsCount > 0
 
-      if (Number.isNaN(installmentAmount) || installmentAmount <= 0) {
+      let safeInstallmentAmount = installmentAmount
+      if (hasInvalidInstallmentAmount) {
+        safeInstallmentAmount = canRecalculateInstallmentAmount
+          ? totalAmount / installmentsCount
+          : 0
+      }
+
+      if (hasInvalidInstallmentAmount) {
         warnings.push(
           `installmentAmount inválido en hoja ${sheetName}, fila ${index + 1}. Se recalculó automáticamente.`
         )
@@ -938,7 +943,7 @@ export async function importWorkbookFromExcel(
     errors.push('Falta hoja GastosFijos.')
   }
 
-  if (errors.length > 0) {
+  if (!configSheetName || !paymentMethodsSheetName || !fixedExpensesSheetName) {
     return {
       ok: false,
       workbook: null,
@@ -948,11 +953,9 @@ export async function importWorkbookFromExcel(
     }
   }
 
-  const configSheet = xlsxWorkbook.Sheets[configSheetName as string]
-  const paymentMethodsSheet =
-    xlsxWorkbook.Sheets[paymentMethodsSheetName as string]
-  const fixedExpensesSheet =
-    xlsxWorkbook.Sheets[fixedExpensesSheetName as string]
+  const configSheet = xlsxWorkbook.Sheets[configSheetName]
+  const paymentMethodsSheet = xlsxWorkbook.Sheets[paymentMethodsSheetName]
+  const fixedExpensesSheet = xlsxWorkbook.Sheets[fixedExpensesSheetName]
 
   const configParse = parseConfigSheet(configSheet)
   const paymentMethodsParse = parsePaymentMethodsSheet(paymentMethodsSheet)
